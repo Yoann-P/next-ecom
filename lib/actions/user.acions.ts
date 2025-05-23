@@ -41,7 +41,8 @@ export async function signOutUser() {
     } catch (error) {
         return {
             success: false,
-            message: "Error signing out user"
+            message: "Error signing out user",
+            error: error instanceof Error ? error.message : String(error)
         }
     }
 }
