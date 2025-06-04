@@ -51,8 +51,9 @@ export function round2(value: number | string) {
 }
 
 // Formatter pour l'affichage en euros selon la convention française
+/*
 const CURRENCY_FORMATTER = new Intl.NumberFormat('fr-FR', {
     currency: 'EUR',
     style: 'currency',
     minimumFractionDigits: 2
-});
+});*/
