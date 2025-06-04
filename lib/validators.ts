@@ -54,6 +54,6 @@ export const insertCartSchema = z.object({
     totalPrice: currency,
     shippingPrice: currency,
     taxPrice: currency,
-    sessionCartId: z.string().min(1, {message: "Session cart id is required"}),
+    SessionCartId: z.string().min(1, {message: "Session cart id is required"}),
     userId: z.string().optional().nullable()
 })

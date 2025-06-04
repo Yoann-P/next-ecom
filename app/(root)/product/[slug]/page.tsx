@@ -5,6 +5,7 @@ import {Badge} from "@/components/ui/badge";
 import {Card, CardContent} from "@/components/ui/card";
 import ProductImages from "@/components/shared/product/product-images";
 import AddToCart from "@/components/shared/product/add-to-cart";
+import {getMyCart} from "@/lib/actions/cart.actions";
 
 const ProductDetailsPage = async (props: {
     params: Promise<{ slug: string }>
@@ -15,6 +16,8 @@ const ProductDetailsPage = async (props: {
     if (!product) {
         return notFound()
     }
+
+    const cart = await getMyCart()
 
     return (
         <section>
@@ -49,38 +52,43 @@ const ProductDetailsPage = async (props: {
                 </div>
 
                 {/*Actions Columns*/}
-                <Card>
-                    <CardContent className="p-4">
-                        <div className="mb-2 flex justify-between">
-                            <div>Price</div>
-                            <div>
-                                <ProductPrice value={Number(product.price)} />
+                <div className="col-span-1 flex flex-col justify-start">
+                    <Card>
+                        <CardContent className="p-4">
+                            <div className="flex flex-col space-y-4">
+                                <div className="mb-2 flex justify-between">
+                                    <div>Price</div>
+                                    <div>
+                                        <ProductPrice value={Number(product.price)}/>
+                                    </div>
+                                </div>
+                                <div className="mb-2 flex justify-between">
+                                    <div>Status</div>
+                                    {product.stock > 0 ? (
+                                        <Badge variant="outline">In stock</Badge>
+                                    ) : (
+                                        <Badge variant="destructive">Unavailable</Badge>
+                                    )}
+                                </div>
+                                {product.stock > 0 && (
+                                    <div className=" flex-center">
+                                        <AddToCart
+                                            cart={cart}
+                                            item={{
+                                                productId: product.id,
+                                                name: product.name,
+                                                slug: product.slug,
+                                                price: product.price,
+                                                qty: 1,
+                                                image: product.images![0],
+                                            }}
+                                        />
+                                    </div>
+                                )}
                             </div>
-                        </div>
-                        <div className="mb-2 flex justify-between">
-                            <div>Status</div>
-                            {product.stock > 0 ? (
-                                <Badge variant="outline">In stock</Badge>
-                            ) : (
-                                <Badge variant="destructive">Unavailable</Badge>
-                            )}
-                        </div>
-                        {product.stock > 0 && (
-                            <div className=" flex-center">
-                                <AddToCart
-                                    item={{
-                                        productId: product.id,
-                                        name: product.name,
-                                        slug: product.slug,
-                                        price: product.price,
-                                        qty: 1,
-                                        image: product.images![0],
-                                    }}
-                                />
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </section>
     )

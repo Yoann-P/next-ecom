@@ -33,3 +33,26 @@ export async function formatError(error: any) {
         return typeof error.message === "string" ? error.message : JSON.stringify(error.message)
     }
 }
+
+//Round number to 2 decimal places
+export function round2(value: number | string) {
+    let num: number;
+    if (typeof value === 'number') {
+        num = value;
+    } else if (typeof value === 'string') {
+        num = Number(value);
+        if (isNaN(num)) {
+            throw new Error('Value string is not a valid number');
+        }
+    } else {
+        throw new Error('Value must be a number or string');
+    }
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+}
+
+// Formatter pour l'affichage en euros selon la convention française
+const CURRENCY_FORMATTER = new Intl.NumberFormat('fr-FR', {
+    currency: 'EUR',
+    style: 'currency',
+    minimumFractionDigits: 2
+});
