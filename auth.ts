@@ -1,12 +1,10 @@
 import NextAuth from "next-auth";
-import {PrismaAdapter} from "@auth/prisma-adapter";
-import {prisma} from "@/db/prisma";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "@/db/prisma";
 import CredentialsProvider from 'next-auth/providers/credentials'
-import {compareSync} from "bcrypt-ts-edge";
-import type {NextAuthConfig} from 'next-auth';
-//import {cookies} from "next/headers";
-import {NextResponse} from "next/server";
-
+import { compareSync } from "bcrypt-ts-edge";
+import type { NextAuthConfig } from 'next-auth';
+import { cookies } from "next/headers";
 
 export const config = {
     pages: {
@@ -25,20 +23,12 @@ export const config = {
                 password: {type: "password"}
             },
             async authorize(credentials) {
-                // add logic here to look up the user from the credentials supplied
                 if (credentials == null) return null
-
-                //Find user in databse
                 const user = await prisma.user.findFirst({
-                    where: {
-                        email: credentials.email as string
-                    }
+                    where: { email: credentials.email as string }
                 })
-
-                //Check if the user exist and the password matches
                 if (user && user.password) {
                     const isMatch = compareSync(credentials.password as string, user.password)
-                    //If password is correct return the user
                     if (isMatch) {
                         return {
                             id: user.id,
@@ -48,69 +38,67 @@ export const config = {
                         }
                     }
                 }
-                //If user does not exist or password doesn't match return null
                 return null
             }
         })
     ],
     callbacks: {
         async session({session, user, trigger, token}: any) {
-            //Set the user Id from the token
             session.user.id = token.sub
             session.user.role = token.role
             session.user.name = token.name
-
-            //If there is an update, set the user name
             if (trigger === "update") {
                 session.user.name = user.name
             }
-
             return session
         },
-
         async jwt({token, user, trigger, session}: any) {
-            //Assign user field to the token
             if (user) {
+                token.id = user.id
                 token.role = user.role
-
-                //If user had no name then use the email
                 if (user.name === "NO_NAME") {
                     token.name = user.email!.split("@")[0]
-
-                    //Update the database to reflect the token name
                     await prisma.user.update({
                         where: {id: user.id},
                         data: {name: token.name}
                     })
                 }
             }
+            if(trigger === "signIn" || trigger === "signUp"){
+                const cookiesObject = await cookies()
+                const sessionCartId = cookiesObject.get("sessionCartId")?.value
+                if(sessionCartId){
+                    const sessionCart = await prisma.cart.findFirst({
+                        where: {SessionCartId: sessionCartId}
+                    })
+                    if(sessionCart){
+                        await prisma.cart.deleteMany({
+                            where: {userId:user.id}
+                        })
+                        await prisma.cart.update({
+                            where: {id: sessionCart.id},
+                            data: {userId: user.id}
+                        })
+                    }
+                }
+            }
             return token
         },
-        /*authorized({request, auth}: any) {
-            //Check for session cart cookie
-            if (!request.cookies.get("sessionCartId")) {
-                //Generate new session cart cookie id
-                const sessionCartId = crypto.randomUUID()
-
-                //CLone request headers
-                const newRequestHeaders = new Headers(request.headers)
-
-                //Crete new response and add the new headers
-                const response = NextResponse.next({
-                    request: {
-                        headers: newRequestHeaders
-                    }
-                });
-
-                //Set newly generated sessionCartId in the response cookies
-                response.cookies.set('sessionCartId', sessionCartId)
-
-                return response
-            } else {
-                return true
-            }
-        }*/
+        authorized({ request, auth }: any) {
+            const protectedPaths = [
+                /\/shipping-address/,
+                /\/payment-method/,
+                /\/place-order/,
+                /\/profile/,
+                /\/user\/(.*)/,
+                /\/order\/(.*)/,
+                /\/admin/,
+            ];
+            const { pathname } = request.nextUrl;
+            if (!auth && protectedPaths.some((p) => p.test(pathname))) return false;
+            return true;
+        }
     }
 } satisfies NextAuthConfig
 
-export const {auth, handlers, signIn, signOut} = NextAuth(config)
+export const { auth, handlers, signIn, signOut } = NextAuth(config)
