@@ -255,7 +255,7 @@ const OrderDetailsTable = ({
     // 1. Crée la commande PayPal côté serveur et retourne l'ID PayPal
     const handleCreatePaypalOrder = async () => {
         const res = await createPayPalOrder(order.id);
-        if (!res.success) {
+        if (!res.success || !res.data) {
             toast.warning("Something went wrong", {
                 description: res.message,
                 action: {
@@ -265,8 +265,9 @@ const OrderDetailsTable = ({
             });
             throw new Error(res.message || "PayPal order creation failed");
         }
-        return res.data; // <-- C'est l'ID PayPal à retourner à PayPalButtons
+        return res.data; // TypeScript : string
     };
+
 
     // 2. Capture le paiement PayPal côté serveur avec l'ID PayPal
     const handleApprovePaypalOrder = async (data: any, actions: any) => {
@@ -399,7 +400,7 @@ const OrderDetailsTable = ({
                                             createOrder={handleCreatePaypalOrder}
                                             onApprove={handleApprovePaypalOrder}
                                             onError={(err) => {
-                                                toast.error("PayPal error", { description: err.message });
+                                                toast.error("PayPal error");
                                             }}
                                         />
                                     </PayPalScriptProvider>

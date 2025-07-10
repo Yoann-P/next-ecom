@@ -390,7 +390,7 @@ export async function getOrderById(orderId: string) {
 }
 
 // Crée une commande PayPal et sauvegarde l'ID PayPal dans la commande interne
-export async function createPayPalOrder(orderId: string) {
+/*export async function createPayPalOrder(orderId: string) {
     try {
         const order = await prisma.order.findFirst({ where: { id: orderId } });
         if (order) {
@@ -420,7 +420,44 @@ export async function createPayPalOrder(orderId: string) {
             message: formatError(error)
         };
     }
+}*/
+
+export async function createPayPalOrder(orderId: string): Promise<{
+    success: boolean;
+    message?: string;
+    data?: string;
+}> {
+    try {
+        const order = await prisma.order.findFirst({ where: { id: orderId } });
+        if (order) {
+            const paypalOrder = await paypal.createOrder(Number(order.totalPrice));
+            await prisma.order.update({
+                where: { id: orderId },
+                data: {
+                    paymentResult: {
+                        id: paypalOrder.id,
+                        email_address: "",
+                        status: "",
+                        pricePaid: 0
+                    }
+                }
+            });
+            return {
+                success: true,
+                message: "PayPal order created",
+                data: paypalOrder.id // <-- string
+            };
+        } else {
+            throw new Error("Order not found");
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message: formatError(error)
+        };
+    }
 }
+
 
 // Capture le paiement PayPal et met à jour la commande comme payée
 export async function approvePaypalOrder(
