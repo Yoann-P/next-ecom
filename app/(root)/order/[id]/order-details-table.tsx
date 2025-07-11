@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { PayPalScriptProvider, PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { createPayPalOrder, approvePaypalOrder } from "@/lib/actions/order.actions";
 import { toast } from "sonner";
-import type { OnApproveData, OnApproveActions, CreateOrderData, CreateOrderActions } from "@paypal/paypal-js";
+import type { OnApproveData, OnApproveActions } from "@paypal/paypal-js";
 
 const OrderDetailsTable = ({
                                order,
@@ -66,7 +66,6 @@ const OrderDetailsTable = ({
     // 2. Capture le paiement PayPal côté serveur avec l'ID PayPal
     const handleApprovePaypalOrder = async (
         data: OnApproveData,
-        _actions: OnApproveActions
     ) => {
         const res = await approvePaypalOrder(order.id, data.orderID);
         if (!res.success) {
