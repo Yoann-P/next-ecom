@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { PayPalScriptProvider, PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { createPayPalOrder, approvePaypalOrder } from "@/lib/actions/order.actions";
 import { toast } from "sonner";
-import type { OnApproveData, OnApproveActions } from "@paypal/paypal-js";
+import type { OnApproveData} from "@paypal/paypal-js";
 
 const OrderDetailsTable = ({
                                order,
